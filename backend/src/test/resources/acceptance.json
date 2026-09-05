@@ -1,0 +1,250 @@
+[
+  {
+    "op": "create",
+    "as": "sample",
+    "module": "samples",
+    "data": {
+      "name": "智能控制器演示样机",
+      "sku": "SAMPLE-SKU001",
+      "onHand": 10,
+      "unitValue": 500
+    }
+  },
+  {
+    "op": "create",
+    "as": "request",
+    "module": "requests",
+    "data": {
+      "sample": "$sample.id",
+      "recipient": "华东合作伙伴（演示）",
+      "purpose": "现场兼容性评估",
+      "quantity": 6,
+      "dueDate": "$today+30"
+    }
+  },
+  {
+    "op": "action",
+    "target": "request",
+    "action": "approve",
+    "data": {},
+    "role": "reviewer"
+  },
+  {
+    "op": "check",
+    "target": "sample",
+    "expect": {
+      "data.reserved": 6
+    }
+  },
+  {
+    "op": "create",
+    "as": "excess",
+    "module": "requests",
+    "data": {
+      "sample": "$sample.id",
+      "recipient": "另一演示客户",
+      "purpose": "功能测试",
+      "quantity": 5,
+      "dueDate": "$today+30"
+    }
+  },
+  {
+    "op": "action",
+    "target": "excess",
+    "action": "approve",
+    "data": {},
+    "role": "reviewer",
+    "error": 409
+  },
+  {
+    "op": "action",
+    "target": "request",
+    "action": "ship",
+    "data": {
+      "tracking": "SAMPLE-SHIP001"
+    }
+  },
+  {
+    "op": "check",
+    "target": "sample",
+    "expect": {
+      "data.onHand": 4,
+      "data.out": 6,
+      "data.reserved": 0
+    }
+  },
+  {
+    "op": "create",
+    "as": "return1",
+    "module": "returns",
+    "data": {
+      "request": "$request.id",
+      "good": 4,
+      "damaged": 1,
+      "inspection": "4 台完好、1 台外壳受损"
+    }
+  },
+  {
+    "op": "action",
+    "target": "return1",
+    "action": "receive",
+    "data": {},
+    "role": "reviewer"
+  },
+  {
+    "op": "check",
+    "target": "sample",
+    "expect": {
+      "data.onHand": 8,
+      "data.out": 1,
+      "data.damaged": 1
+    }
+  },
+  {
+    "op": "action",
+    "target": "request",
+    "action": "close",
+    "data": {},
+    "role": "reviewer",
+    "error": 409
+  },
+  {
+    "op": "create",
+    "as": "tooMany",
+    "module": "returns",
+    "data": {
+      "request": "$request.id",
+      "good": 2,
+      "damaged": 0,
+      "inspection": "重复归还测试"
+    }
+  },
+  {
+    "op": "action",
+    "target": "tooMany",
+    "action": "receive",
+    "data": {},
+    "role": "reviewer",
+    "error": 409
+  },
+  {
+    "op": "check",
+    "target": "sample",
+    "expect": {
+      "data.out": 1
+    }
+  },
+  {
+    "op": "create",
+    "as": "return2",
+    "module": "returns",
+    "data": {
+      "request": "$request.id",
+      "good": 1,
+      "damaged": 0,
+      "inspection": "余下样机归还完好"
+    }
+  },
+  {
+    "op": "action",
+    "target": "return2",
+    "action": "receive",
+    "data": {},
+    "role": "reviewer"
+  },
+  {
+    "op": "create",
+    "as": "repair",
+    "module": "disposals",
+    "data": {
+      "sample": "$sample.id",
+      "quantity": 1,
+      "kind": "REPAIR",
+      "reason": "更换外壳并完成功能复测"
+    }
+  },
+  {
+    "op": "action",
+    "target": "repair",
+    "action": "approve",
+    "data": {},
+    "role": "reviewer"
+  },
+  {
+    "op": "check",
+    "target": "sample",
+    "expect": {
+      "data.onHand": 10,
+      "data.out": 0,
+      "data.damaged": 0
+    }
+  },
+  {
+    "op": "action",
+    "target": "request",
+    "action": "close",
+    "data": {},
+    "role": "reviewer"
+  },
+  {
+    "op": "check",
+    "target": "request",
+    "expect": {
+      "state": "CLOSED"
+    }
+  },
+  {
+    "op": "action",
+    "target": "excess",
+    "action": "approve",
+    "data": {},
+    "role": "reviewer"
+  },
+  {
+    "op": "action",
+    "target": "excess",
+    "action": "cancel",
+    "data": {}
+  },
+  {
+    "op": "check",
+    "target": "sample",
+    "expect": {
+      "data.reserved": 0
+    }
+  },
+  {
+    "op": "count",
+    "module": "movements",
+    "count": 7,
+    "where": {}
+  },
+  {
+    "op": "action",
+    "target": "sample",
+    "action": "restock",
+    "data": {
+      "quantity": 5,
+      "reference": "SMP-RESTOCK001"
+    },
+    "role": "reviewer"
+  },
+  {
+    "op": "check",
+    "target": "sample",
+    "expect": {
+      "data.onHand": 15
+    }
+  },
+  {
+    "op": "action",
+    "target": "sample",
+    "action": "restock",
+    "data": {
+      "quantity": 5,
+      "reference": "SMP-RESTOCK001"
+    },
+    "role": "reviewer",
+    "error": 409
+  }
+]

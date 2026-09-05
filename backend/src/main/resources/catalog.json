@@ -1,0 +1,403 @@
+{
+  "slug": "sample",
+  "pkg": "sample",
+  "name": "知华样品借用管理",
+  "subtitle": "样品库存、借样审批、寄送、归还与损坏处置",
+  "accent": "#5d5480",
+  "modules": [
+    {
+      "key": "samples",
+      "label": "样品目录",
+      "description": "可借库存、借出量及损坏待处置量",
+      "initial": "ACTIVE",
+      "editable": false,
+      "creatable": true,
+      "fields": [
+        {
+          "key": "name",
+          "label": "样品名称",
+          "type": "text",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "sku",
+          "label": "样品 SKU",
+          "type": "text",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "onHand",
+          "label": "初始完好数量",
+          "type": "integer",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": "0",
+          "max": "1000000"
+        },
+        {
+          "key": "unitValue",
+          "label": "单位参考价值",
+          "type": "money",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": "0",
+          "max": "999999999"
+        }
+      ],
+      "actions": [
+        {
+          "key": "restock",
+          "label": "补充样品入库",
+          "from": [
+            "ACTIVE"
+          ],
+          "to": "ACTIVE",
+          "fields": [
+            {
+              "key": "quantity",
+              "label": "入库数量",
+              "type": "integer",
+              "required": true,
+              "ref": null,
+              "options": [],
+              "min": "1",
+              "max": "1000000"
+            },
+            {
+              "key": "reference",
+              "label": "入库凭证号",
+              "type": "text",
+              "required": true,
+              "ref": null,
+              "options": [],
+              "min": null,
+              "max": null
+            }
+          ],
+          "role": "REVIEWER",
+          "separate": true
+        }
+      ]
+    },
+    {
+      "key": "requests",
+      "label": "借样申请",
+      "description": "预约库存、领用寄送、分批归还与结案",
+      "initial": "DRAFT",
+      "editable": true,
+      "creatable": true,
+      "fields": [
+        {
+          "key": "sample",
+          "label": "样品",
+          "type": "ref",
+          "required": true,
+          "ref": "samples",
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "recipient",
+          "label": "借样人 / 客户",
+          "type": "text",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "purpose",
+          "label": "借样目的",
+          "type": "text",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "quantity",
+          "label": "借用数量",
+          "type": "integer",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": "1",
+          "max": "1000000"
+        },
+        {
+          "key": "dueDate",
+          "label": "归还期限",
+          "type": "date",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": null,
+          "max": null
+        }
+      ],
+      "actions": [
+        {
+          "key": "approve",
+          "label": "审批预留",
+          "from": [
+            "DRAFT"
+          ],
+          "to": "RESERVED",
+          "role": "REVIEWER",
+          "separate": true,
+          "fields": []
+        },
+        {
+          "key": "ship",
+          "label": "发出样品",
+          "from": [
+            "RESERVED"
+          ],
+          "to": "OUT",
+          "role": "OPERATOR",
+          "separate": false,
+          "fields": [
+            {
+              "key": "tracking",
+              "label": "快递 / 交接单号",
+              "type": "text",
+              "required": true,
+              "ref": null,
+              "options": [],
+              "min": null,
+              "max": null
+            }
+          ]
+        },
+        {
+          "key": "extend",
+          "label": "批准延期",
+          "from": [
+            "OUT"
+          ],
+          "to": "OUT",
+          "role": "REVIEWER",
+          "separate": true,
+          "fields": [
+            {
+              "key": "dueDate",
+              "label": "新的归还期限",
+              "type": "date",
+              "required": true,
+              "ref": null,
+              "options": [],
+              "min": null,
+              "max": null
+            }
+          ]
+        },
+        {
+          "key": "close",
+          "label": "完成结案",
+          "from": [
+            "OUT"
+          ],
+          "to": "CLOSED",
+          "role": "REVIEWER",
+          "separate": true,
+          "fields": []
+        },
+        {
+          "key": "cancel",
+          "label": "取消并释放",
+          "from": [
+            "DRAFT",
+            "RESERVED"
+          ],
+          "to": "CANCELLED",
+          "role": "OPERATOR",
+          "separate": false,
+          "fields": []
+        }
+      ]
+    },
+    {
+      "key": "returns",
+      "label": "样品归还",
+      "description": "合格返库与损坏隔离，防止超量归还",
+      "initial": "DRAFT",
+      "editable": true,
+      "creatable": true,
+      "fields": [
+        {
+          "key": "request",
+          "label": "借样申请",
+          "type": "ref",
+          "required": true,
+          "ref": "requests",
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "good",
+          "label": "完好归还数量",
+          "type": "integer",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": "0",
+          "max": "1000000"
+        },
+        {
+          "key": "damaged",
+          "label": "损坏数量",
+          "type": "integer",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": "0",
+          "max": "1000000"
+        },
+        {
+          "key": "inspection",
+          "label": "验收说明",
+          "type": "text",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": null,
+          "max": null
+        }
+      ],
+      "actions": [
+        {
+          "key": "receive",
+          "label": "确认验收",
+          "from": [
+            "DRAFT"
+          ],
+          "to": "RECEIVED",
+          "role": "REVIEWER",
+          "separate": true,
+          "fields": []
+        }
+      ]
+    },
+    {
+      "key": "disposals",
+      "label": "损坏处置",
+      "description": "审批报损或修复转为可借库存",
+      "initial": "DRAFT",
+      "editable": true,
+      "creatable": true,
+      "fields": [
+        {
+          "key": "sample",
+          "label": "样品",
+          "type": "ref",
+          "required": true,
+          "ref": "samples",
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "quantity",
+          "label": "处置数量",
+          "type": "integer",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": "1",
+          "max": "1000000"
+        },
+        {
+          "key": "kind",
+          "label": "处置方式",
+          "type": "select",
+          "required": true,
+          "ref": null,
+          "options": [
+            "REPAIR",
+            "SCRAP"
+          ],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "reason",
+          "label": "处置依据",
+          "type": "text",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": null,
+          "max": null
+        }
+      ],
+      "actions": [
+        {
+          "key": "approve",
+          "label": "批准处置",
+          "from": [
+            "DRAFT"
+          ],
+          "to": "POSTED",
+          "role": "REVIEWER",
+          "separate": true,
+          "fields": []
+        }
+      ]
+    },
+    {
+      "key": "movements",
+      "label": "样品库存流水",
+      "description": "预留、发出、归还、修复与报损的追溯账",
+      "initial": "POSTED",
+      "editable": false,
+      "creatable": false,
+      "fields": [
+        {
+          "key": "sample",
+          "label": "样品",
+          "type": "ref",
+          "required": true,
+          "ref": "samples",
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "kind",
+          "label": "类型",
+          "type": "text",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": null,
+          "max": null
+        },
+        {
+          "key": "quantity",
+          "label": "数量",
+          "type": "integer",
+          "required": true,
+          "ref": null,
+          "options": [],
+          "min": "0",
+          "max": "1000000"
+        }
+      ],
+      "actions": []
+    }
+  ]
+}
